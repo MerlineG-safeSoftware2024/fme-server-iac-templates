@@ -1,4 +1,4 @@
-# FME Flow (Distributed deployment, Windows)
+# testing terraform plan with polling FME Flow (Distributed deployment, Windows)
 These terraform scripts deploy a distributed FME Flow running on windows ec2 instances in AWS. The scripts can be used as a boilerplate for automatic deployments of the public FME Flow AMIs in your own environment with your own configurations. The terraform scripts are split up into multiple modules to reflect the distributed architecture and to simplify modification of the resources for different scenarios.
 
 # How to use the scripts
