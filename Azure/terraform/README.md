@@ -6,16 +6,23 @@ These terraform scripts deploy [FME Flow (Distributed deployment, Windows)](http
 ## Quickstart
 ### Prerequisites
 
-To deploy FME Flow (Distributed deployment, Windows) on Microsoft Azure from a local machine, the Azure CLI and terraform need to be installed, configured and terraform needs to be authenticated to Azure. Follow this documentation depending on your scenario: [Quickstart: Install and Configure Terraform](https://docs.microsoft.com/en-us/azure/developer/terraform/quickstart-configure)
+1. To deploy FME Flow (Distributed deployment, Windows) on Microsoft Azure from a local machine, the Azure CLI and terraform need to be installed, configured and terraform needs to be authenticated to Azure. Follow this documentation depending on your scenario: [Quickstart: Install and Configure Terraform](https://docs.microsoft.com/en-us/azure/developer/terraform/quickstart-configure)
+
+2. The scripts will default to using FME marketplace images to deploy. If you want to use a different build, you will first need to create FME images via packer: [packer scripts to create Azure Windows Images for a distributed FME Flow deployment](https://github.com/safesoftware/fme-server-iac-templates/blob/main/Azure/packer/README.md)
 
 ### Apply the deployment
 
 Once all prerequisites are installed you confirmed that terraform successfully authenticated to Azure the terraform scripts can be deployed via the following steps
 
 1. Review the `variables.tf` file. This file contains all variables for the deployment. Most of the variables have default values assigned, but can be changed in the `.tf` file or overridden by using the `-var` flag with the `terraform apply` command. You will be prompted for any variable that does not have a default after running the `terraform apply` command.
-2. Run `terraform apply` in your console from the directory that that holds the `main.tf` and `variables.tf` file and provide any variables you are prompted for.
-3. Review the deployment plan. If the terraform script and the provided variables validated successfully the deployment plan will be output in the consoled for you to review. Additionally you will be prompted wether you want to go ahead with the deployment. If everything looks ok, go ahead with `yes`. The deployment will now provision and configure all necessary Azure resources and start up FME Flow. This will take about 10 - 20 minutes.
-4. In this quickstart example the terraform statefile `terraform.tfsate` will be created on on your local machine, so you can review the current state of your deployment and test the deployment. For any productive deployments it is highly recommended to not store the state file locally but in a remote location. This makes sure you can collaborate on the state and any sensitive data contained in the state file will only be accessible to authorized users. To use Azure storage as a backend for your statefile follow this documentation: [Azure storage terraform backend](https://www.terraform.io/language/settings/backends/azurerm)
+2. If you want to deploy into a existing resource group in Azure, you will need to make the following edits to `main.tf`: 
+   - replace `resource azurerm_resource_group "fme_flow"` with `data "azurerm_resource_group" "fme_flow"`
+   - remove or comment out the `location` and `tags` lines from this same block
+   - prepend `data.` in front of all occurrences of `azurerm_resource_group.fme_flow` in the template
+3. If you created your own FME images via packer, you will need to edit the `main.tf` files under `modules/vmss/vmss_core` and `vmss_engine` to include the custom `source_image_id` and remove the references to the marketplace images (see comment above `source_image_reference` line).
+4. Run `terraform apply` in your console from the directory that that holds the `main.tf` and `variables.tf` file and provide any variables you are prompted for.
+5. Review the deployment plan. If the terraform script and the provided variables are validated successfully the deployment plan will be output in the console for you to review. Additionally you will be prompted whether you want to go ahead with the deployment. If everything looks ok, go ahead with `yes`. The deployment will now provision and configure all necessary Azure resources and start up FME Flow. This will take at least 10 - 20 minutes.
+6. In this quickstart example the terraform statefile `terraform.tfsate` will be created on on your local machine, so you can review the current state of your deployment and test the deployment. For any productive deployments it is highly recommended to not store the state file locally but in a remote location. This makes sure you can collaborate on the state and any sensitive data contained in the state file will only be accessible to authorized users. To use Azure storage as a backend for your statefile follow this documentation: [Azure storage terraform backend](https://www.terraform.io/language/settings/backends/azurerm)
 
 ### Test FME Flow
 
@@ -33,13 +40,13 @@ To remove the FME Flow deployment run `terrform destroy` in your console and con
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.9.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.12.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.9.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 4.12.0 |
 
 ## Modules
 
@@ -51,7 +58,6 @@ To remove the FME Flow deployment run `terrform destroy` in your console and con
 | <a name="module_network"></a> [network](#module\_network) | ./modules/network | n/a |
 | <a name="module_storage"></a> [storage](#module\_storage) | ./modules/storage | n/a |
 | <a name="module_vmss_core"></a> [vmss\_core](#module\_vmss\_core) | ./modules/vmss/vmss_core | n/a |
-| <a name="module_vmss_cpuusage_engine"></a> [vmss\_cpuusage\_engine](#module\_vmss\_cpuusage\_engine) | ./modules/vmss/vmss_engine | n/a |
 | <a name="module_vmss_standard_engine"></a> [vmss\_standard\_engine](#module\_vmss\_standard\_engine) | ./modules/vmss/vmss_engine | n/a |
 
 ## Resources
@@ -68,17 +74,21 @@ To remove the FME Flow deployment run `terrform destroy` in your console and con
 | <a name="input_agw_snet_name"></a> [agw\_snet\_name](#input\_agw\_snet\_name) | Application gateway virtual network subnet name | `string` | `"fme-flow-agw-snet"` | no |
 | <a name="input_be_snet_name"></a> [be\_snet\_name](#input\_be\_snet\_name) | Backend virtual network subnet name | `string` | `"fme-flow-be-snet"` | no |
 | <a name="input_build_agent_public_ip"></a> [build\_agent\_public\_ip](#input\_build\_agent\_public\_ip) | Public IP of the build agent or machine that is running terraform deployment to be whitelisted in the storage account. This is a workaround for the following known issue: https://github.com/hashicorp/terraform-provider-azurerm/issues/2977 | `string` | n/a | yes |
-| <a name="input_db_admin_pw"></a> [db\_admin\_pw](#input\_db\_admin\_pw) | Specifies the backend database admin pw. This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
+| <a name="input_db_admin_pw"></a> [db\_admin\_pw](#input\_db\_admin\_pw) | Specifies the backend database admin pw. It must contain between 8 and 128 characters. Your password must contain characters from three of the following categories: English uppercase letters, English lowercase letters, numbers (0 through 9), and non-alphanumeric characters (!, $, #, %, etc.). This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
 | <a name="input_db_admin_user"></a> [db\_admin\_user](#input\_db\_admin\_user) | Specifies the backend database admin username. This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
 | <a name="input_db_pw"></a> [db\_pw](#input\_db\_pw) | The password for the fmeflow database (Only used for Azure SQL Server. Should be left blank when PostgreSQL is used). Please review the [SQL Server Password Policy](https://docs.microsoft.com/en-us/sql/relational-databases/security/password-policy?view=azuresqldb-current)). This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
 | <a name="input_db_user"></a> [db\_user](#input\_db\_user) | The login for the fmeflow database (Only used for Azure SQL Server. Should be left blank when PostgreSQL is used). This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
+| <a name="input_dns_zone_name"></a> [dns\_zone\_name](#input\_dns\_zone\_name) | Name of the private DNS Zone used by the pgsql database | `string` | `"fmeflow-pgsql-dns-zone"` | no |
 | <a name="input_domain_name_label"></a> [domain\_name\_label](#input\_domain\_name\_label) | Label for the Domain Name. Will be used to make up the FQDN | `string` | `"fmeflow"` | no |
 | <a name="input_instance_count_core"></a> [instance\_count\_core](#input\_instance\_count\_core) | Number of Core VM instances | `number` | `2` | no |
 | <a name="input_instance_count_engine"></a> [instance\_count\_engine](#input\_instance\_count\_engine) | Number of engine VM instances | `number` | `2` | no |
 | <a name="input_lb_name"></a> [lb\_name](#input\_lb\_name) | Load balancer name | `string` | `"fme-flow-lb"` | no |
 | <a name="input_location"></a> [location](#input\_location) | Location of resources | `string` | `"Canada Central"` | no |
-| <a name="input_owner"></a> [owner](#input\_owner) | Default value for onwer tag | `string` | n/a | yes |
+| <a name="input_nat_gateway_name"></a> [nat\_gateway\_name](#input\_nat\_gateway\_name) | Name of the nat gateway | `string` | `"fmeflow-nat"` | no |
+| <a name="input_owner"></a> [owner](#input\_owner) | Default value for the owner tag | `string` | n/a | yes |
+| <a name="input_pgsql_snet_name"></a> [pgsql\_snet\_name](#input\_pgsql\_snet\_name) | Application gateway virtual network subnet name | `string` | `"fme-flow-pgsql-snet"` | no |
 | <a name="input_pip_name"></a> [pip\_name](#input\_pip\_name) | Public ip name | `string` | `"fme-flow-pip"` | no |
+| <a name="input_publicip_nat_name"></a> [publicip\_nat\_name](#input\_publicip\_nat\_name) | name of the public ip address for the nat gateway | `string` | `"fmeflow-nat-pip"` | no |
 | <a name="input_rg_name"></a> [rg\_name](#input\_rg\_name) | Resource group name | `string` | `"terraform-rg"` | no |
 | <a name="input_vm_admin_pw"></a> [vm\_admin\_pw](#input\_vm\_admin\_pw) | Specifies the windows virual machine admin pw. Password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. The value must be between 12 and 123 characters long. This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
 | <a name="input_vm_admin_user"></a> [vm\_admin\_user](#input\_vm\_admin\_user) | Specifies the windows virual machine admin username. This variable should be retrieved from an [environment variable](https://www.terraform.io/cli/config/environment-variables#tf_var_name) or a secure secret store like [Azure Key Vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault). DO NOT HARDCODE. | `string` | n/a | yes |
@@ -88,7 +98,7 @@ To remove the FME Flow deployment run `terrform destroy` in your console and con
 
 | Name | Description |
 |------|-------------|
-| <a name="output_fme_flow_fqdn"></a> [fme\_server\_fqdn](#output\_fme\_server\_fqdn) | External hostname of FME Flow |
+| <a name="output_fme_flow_fqdn"></a> [fme\_flow\_fqdn](#output\_fme\_flow\_fqdn) | External hostname of FME Flow |
 <!-- END_TF_DOCS --> 
 ## Modifying resources
 The terraform scripts provide an easy way to read and modify the configuration.
