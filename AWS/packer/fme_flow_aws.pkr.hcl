@@ -34,7 +34,8 @@ source "amazon-ebs" "fme_core" {
   instance_type         = "m5.large"
   region                = "${var.region}"
   source_ami            = "${var.source_ami}"
-  user_data_file        = "scripts/bootstrap_win.txt"
+  #user_data_file        = "scripts/bootstrap_win.txt" 
+  user_data_file        = "AWS/packer/scripts/bootstrap_win.txt"
   winrm_username        = "Administrator"
   disable_stop_instance = true
   
@@ -62,7 +63,8 @@ source "amazon-ebs" "fme_engine" {
   instance_type  = "m5.large"
   region         = "${var.region}"
   source_ami     = "${var.source_ami}"
-  user_data_file = "scripts/bootstrap_win.txt"
+  #user_data_file = "scripts/bootstrap_win.txt"
+  user_data_file        = "AWS/packer/scripts/bootstrap_win.txt"
   winrm_username = "Administrator"
   disable_stop_instance = true
   
