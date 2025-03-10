@@ -14,7 +14,7 @@ locals {
 resource "aws_launch_template" "fme_flow_engine" {
   name                   = var.engine_name
   image_id               = var.fme_engine_image_id
-  instance_type          = "t4g.large"
+  instance_type          = "t3.large"
   vpc_security_group_ids = [var.sg_id]
   iam_instance_profile {
     name = var.iam_instance_profile
