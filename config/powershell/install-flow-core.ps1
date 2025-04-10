@@ -4,7 +4,7 @@ Write-Host "Downloading installer from $installer_url"
 $ProgressPreference = 'SilentlyContinue'
 Invoke-WebRequest -Uri "$installer_url" -OutFile C:\fme-flow.exe
 Write-Host "Installing FME Flow..."
-Start-Process C:\fme-flow.exe -Wait -ArgumentList "-s", "-dC:\FME", "-sp""COREHOSTNAME=localhost EXTERNALHOSTNAME=localhost SERVLETPORT=8080 DEPLOYMENTNAME=localhost NODENAME=localhost FMEFLOWSHAREDDATA=C:\Data DATABASETYPE=PostgreSQL INSTALLTYPE=Distributed ADDLOCAL=FMEFlowCore,Services,FMEFlowDatabase /qn /norestart"""  
+Start-Process C:\fme-flow.exe -Wait -ArgumentList "-s", "-dC:\FME", "-sp""COREHOSTNAME=localhost EXTERNALHOSTNAME=localhost SERVLETPORT=8080 DEPLOYMENTNAME=localhost NODENAME=localhost FMEFLOWSHAREDDATA=C:\Data DATABASETYPE=PostgreSQL INSTALLTYPE=Distributed ADDLOCAL=FMEFlowCore,Services,FMEFlowDatabase FIRSTLOGINCHANGEPASSWORD=false /qn /norestart"""  
 Start-Sleep -s 60
 
 Stop-Service -Name "FME Flow Core"
