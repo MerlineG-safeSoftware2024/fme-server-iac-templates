@@ -49,7 +49,6 @@ Add-Content "$modified_values" "logprefix: `"${private_ip}_`""
 Add-Content "$modified_values" "postgresrootpassword: `"postgres`""
 Add-Content "$modified_values" "redisdirforwardslash: `"C:/REDISDIR/`""
 Add-Content "$modified_values" "enableregistrationresponsetransactionhost: `"true`""
-Add-Content "$modified_values" "firstloginchangepassword: `"false`""
 New-Item -Path "C:\" -Name "REDISDIR" -ItemType "directory"
 
 # replace blanked out values to ensure confd runs correctly
