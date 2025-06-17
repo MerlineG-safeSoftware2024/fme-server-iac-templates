@@ -17,11 +17,11 @@
 3. Open the `variables.pkrvars.hcl` file and update the placeholder text for the `region`, FME `installer_url`, `source_ami` and `tags` variables with the values for your deployment.
 4. Validate the script with set variables:
 ```
-packer validate -var-file="variables.pkrvars.hcl" fme_flow_az.pkr.hcl
+packer validate -var-file="variables.pkrvars.hcl" fme_flow_aws.pkr.hcl
 ```
 5. Build the images:
 ```
-packer build -var-file="variables.pkrvars.hcl" fme_flow_az.pkr.hcl
+packer build -var-file="variables.pkrvars.hcl" fme_flow_aws.pkr.hcl
 ```
 ### Modifying the AMIs
 To modify the AMI by installing additional 3rd party software or adding file packer provisioners, similar as used in this example for FME Flow, should be used. For more details please review this [documentation](https://www.packer.io/docs/provisioners)
